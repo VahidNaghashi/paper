@@ -1,0 +1,82 @@
+%% This is a MATLAB code for the texture descriptor : Co-occurrence of adjacent sparse local ternary patterns
+
+function [features ] = CoALTP(im)
+
+    %// Get the dimensions
+    rows=size(im,1);
+    cols=size(im,2);
+    t = 5/255;
+    H1 = zeros(1,16);
+    H2 = zeros(1,16);
+
+    %// For the upper and lower LTP patterns
+    ltp_upper = zeros(size(im));
+    ltp_lower = zeros(size(im));
+
+    %// For each pixel in our image, ignoring the borders...
+    for row = 2 : rows - 1
+        for col = 2 : cols - 1
+            cen = im(row,col); %// Get centre
+
+            %// Get neighbourhood - cast to double for better precision
+            pixels = double(im(row-1:row+1,col-1:col+1));
+
+            %// Get ranges and determine LTP
+            out_LTP = zeros(3, 3);
+            low = cen - t;
+            high = cen + t;
+            out_LTP(pixels < low) = -1;
+            out_LTP(pixels > high) = 1;
+            out_LTP(pixels >= low & pixels <= high) = 0;
+
+            %// Get upper and lower patterns
+            upper = out_LTP;
+            upper(upper == -1) = 0;
+            
+
+            lower = out_LTP;
+            lower(lower == 1) = 0;
+            lower(lower == -1) = 1;
+            
+
+           
+            ltp_upper(row-1,col-1) = upper(3,1)*2^0 + upper(3,3)*2^1 + upper(1,3)*2^2 + upper(1,1)*2^3;
+
+            
+            ltp_lower(row-1,col-1) = lower(3,1)*2^0 + lower(3,3)*2^1 + lower(1,3)*2^2 + lower(1,1)*2^3;
+            
+            %H1(ltp_upper(row-1,col-1)+1) = H1(ltp_upper(row-1,col-1)+1) + 1;
+            %H2(ltp_lower(row-1,col-1)+1) = H2(ltp_lower(row-1,col-1)+1) + 1;
+            
+            
+       end
+    end
+
+    fImg1 = ltp_upper;
+    fImg2 = ltp_lower;
+
+
+
+    graymat0=graycomatrix(fImg1,'Graylimits',[0,15],'Numlevels',16,'Offset',[1 0]);
+    graymat45=graycomatrix(fImg1,'Graylimits',[0,15],'Numlevels',16,'Offset',[-1 -1]);
+    graymat90=graycomatrix(fImg1,'Graylimits',[0,15],'Numlevels',16,'Offset',[0 1]);
+    graymat135=graycomatrix(fImg1,'Graylimits',[0,15],'Numlevels',16,'Offset',[-1 1]);
+
+    graymat02=graycomatrix(fImg2,'Graylimits',[0,15],'Numlevels',16,'Offset',[1 0]);
+    graymat452=graycomatrix(fImg2,'Graylimits',[0,15],'Numlevels',16,'Offset',[-1 -1]);
+    graymat902=graycomatrix(fImg2,'Graylimits',[0,15],'Numlevels',16,'Offset',[0 1]);
+    graymat1352=graycomatrix(fImg2,'Graylimits',[0,15],'Numlevels',16,'Offset',[-1 1]);
+
+PTN1=reshape(graymat0,1,256);
+PTN2=reshape(graymat45,1,256);
+PTN3=reshape(graymat90,1,256);
+PTN4=reshape(graymat135,1,256);
+PTN5=reshape(graymat02,1,256);
+PTN6=reshape(graymat452,1,256);
+PTN7=reshape(graymat902,1,256);
+PTN8=reshape(graymat1352,1,256);
+ 
+ features = [ PTN1 PTN2 PTN3 PTN4 PTN5 PTN6 PTN7 PTN8 ];
+    
+    
+end
